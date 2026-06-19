@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Diamant Intérieur - Application Officielle</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { color: #2c3e50; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+        .subtitle { color: #7f8c8d; margin-bottom: 25px; font-style: italic; font-size: 14px; text-align: center; }
+        
+        /* Menu de Sélection des Dessins */
+        .selector-menu {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            background: #e8edf2;
+            padding: 8px;
+            border-radius: 40px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .menu-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: #7f8c8d;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .menu-btn:hover { color: #2c3e50; }
+        .menu-btn.active {
+            background: white;
+            color: #2c3e50;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        /* Conteneur principal */
+        .game-container {
+            display: flex;
+            gap: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            max-width: 1150px;
+            width: 100%;
+        }
+        
+        /* Palette latérale */
+        .palette-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 220px;
+        }
+        .palette-group {
+            border: 1px solid #e8edf2;
+            padding: 12px;
+            border-radius: 10px;
+            background-color: #fafbfc;
+        }
+        .palette-group h3 { margin: 0 0 10px 0; font-size: 13px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; }
+        .color-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .color-btn {
+            height: 44px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            text-shadow: 0px 0px 4px white;
+            transition: all 0.2s ease;
+        }
+        .color-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .color-btn.selected { border-color: #2c3e50; box-shadow: 0 0 0 2px rgba(44,62,80,0.2); transform: scale(1.02); }
+
+        /* Zone de dessin */
+        .canvas-panel {
+            flex: 2.5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .canvas-wrapper {
+            position: relative;
+            width: 530px;
+            height: 530px;
+            background: #fff;
+            border: 2px solid #2c3e50;
+            border-radius: 50%;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+        
+        .zone {
+            cursor: pointer;
+            fill: #ffffff;
+            stroke: #111111;
+            stroke-width: 0.4;
+            transition: fill 0.1s ease;
+        }
+        .zone:hover { fill: #f1f4f9; stroke-width: 0.6; }
+
+        /* Boussole */
+        .cardinal-label {
+            position: absolute;
+            font-weight: bold;
+            font-size: 11px;
+            color: #bdc3c7;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .btn-validate {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(52,152,219,0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-validate:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(52,152,219,0.4); }
+
+        /* Section Résultats */
+        .results-section {
+            margin-top: 40px;
+            max-width: 1150px;
+            width: 100%;
+            display: none;
+        }
+        .profile-card {
+            background: linear-gradient(135deg, #1e272e 0%, #485460 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .profile-card h2 { margin-top: 0; font-size: 28px; letter-spacing: 1px; text-transform: uppercase; }
+        .profile-card .badge { display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.15); border-radius: 20px; font-size: 13px; margin-bottom: 25px; font-weight: 500; }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 25px;
+            text-align: left;
+        }
+        .profile-item {
+            background: rgba(255, 255, 255, 0.07);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .profile-item strong { display: block; margin-bottom: 8px; color: #ffeaa7; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .profile-item span { font-size: 14px; line-height: 1.5; display: block; }
+    </style>
+</head>
+<body>
+
+    <h1>Le Diamant Intérieur</h1>
+    <div class="subtitle" id="appSubtitle">Application Multi-Dessins — par WYZE E.Y. Pinoteau</div>
+
+    <div class="selector-menu">
+        <button class="menu-btn active" onclick="switchDrawing(1, this)">Dessin 1 : La Rosace</button>
+        <button class="menu-btn" onclick="switchDrawing(2, this)">Dessin 2 : Étoiles Entrelacées</button>
+        <button class="menu-btn" onclick="switchDrawing(3, this)">Dessin 3 : Couronnes Équilibrées</button>
+        <button class="menu-btn" onclick="switchDrawing(4, this)">Dessin 4 : Le Grand Cristal</button>
+    </div>
+
+    <div class="game-container">
+        <div class="palette-panel">
+            <div class="palette-group">
+                <h3>Couleurs Chaudes</h3>
+                <div class="color-grid">
+                    <button class="color-btn" style="background:#e74c3c;" onclick="selectColor('#e74c3c', 'Rouge')">Rouge</button>
+                    <button class="color-btn" style="background:#e67e22;" onclick="selectColor('#e67e22', 'Orange')">Orange</button>
+                    <button class="color-btn" style="background:#f1c40f;" onclick="selectColor('#f1c40f', 'Jaune')">Jaune</button>
+                    <button class="color-btn" style="background:#ff9ff3;" onclick="selectColor('#ff9ff3', 'Rose')">Rose</button>
+                </div>
+            </div>
+            <div class="palette-group">
+                <h3>Couleurs Froides</h3>
+                <div class="color-grid">
+                    <button class="color-btn" style="background:#3498db;" onclick="selectColor('#3498db', 'Bleu')">Bleu</button>
+                    <button class="color-btn" style="background:#9b59b6;" onclick="selectColor('#9b59b6', 'Violet')">Violet</button>
+                </div>
+            </div>
+            <div class="palette-group">
+                <h3>Couleurs Neutres</h3>
+                <div class="color-grid">
+                    <button class="color-btn" style="background:#2ecc71;" onclick="selectColor('#2ecc71', 'Vert')">Vert</button>
+                    <button class="color-btn" style="background:#2c3e50; color:white; text-shadow:none;" onclick="selectColor('#2c3e50', 'Noir')">Noir</button>
+                    <button class="color-btn" style="background:#ffffff;" onclick="selectColor('#ffffff', 'Blanc')">Blanc</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-panel">
+            <div style="position:relative;">
+                <div class="cardinal-label" style="top:-25px; left:225px;">NORD (Bison)</div>
+                <div class="cardinal-label" style="bottom:-25px; left:225px;">SUD (Souris)</div>
+                <div class="cardinal-label" style="top:257px; right:-65px;">EST (Aigle)</div>
+                <div class="cardinal-label" style="top:257px; left:-75px;">OUEST (Ours)</div>
+                
+                <div class="canvas-wrapper">
+                    <svg id="diamantSvg" viewBox="-50 -50 100 100" width="100%" height="100%">
+                        </svg>
+                </div>
+            </div>
+            <button class="btn-validate" onclick="generateAnalysis()">Découvrir mon Profil ✨</button>
+        </div>
+    </div>
+
+    <div class="results-section" id="resultsSection">
+        <div class="profile-card">
+            <h2>💎 Votre Profil "Diamant Intérieur" 💎</h2>
+            <div class="badge" id="badgeSens">Analyse Comportementale</div>
+            <p id="cardDynaText" style="font-size: 16px; opacity: 0.95; max-width: 800px; margin: 0 auto 30px auto; line-height: 1.6;"></p>
+            
+            <div class="profile-grid">
+                <div class="profile-item">
+                    <strong>NORD — La Sagesse (Animal : Bison)</strong>
+                    <span id="cardNordText">En attente...</span>
+                </div>
+                <div class="profile-item">
+                    <strong>EST — L'Illumination (Animal : Aigle)</strong>
+                    <span id="cardEstText">En attente...</span>
+                </div>
+                <div class="profile-item">
+                    <strong>SUD — La Spontanéité (Animal : Souris)</strong>
+                    <span id="cardSudText">En attente...</span>
+                </div>
+                <div class="profile-item">
+                    <strong>OUEST — Le Rêve (Animal : Ours)</strong>
+                    <span id="cardOuestText">En attente...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentColor = "";
+        let currentColorName = "";
+        let clickHistory = [];
+        let currentActiveModel = 1;
+
+        const colorMeanings = {
+            'Rouge': 'une grande force de vie, d\'énergie vitale et de dynamisme. Vous avancez avec vigueur et volonté.',
+            'Orange': 'un merveilleux élan de régénération, de joie communicative et de gaieté partagée.',
+            'Jaune': 'une magnifique vitalité solaire, rayonnante et une profonde confiance en vos capacités.',
+            'Rose': 'un besoin de douceur, de tendresse, enveloppé d\'un esprit rêveur et sentimental.',
+            'Bleu': 'une recherche active d\'apaisement, de sérénité et une grande aisance pour exprimer vos idées.',
+            'Violet': 'une profonde spiritualité, une belle clairvoyance doublée d\'un fin esprit d\'analyse.',
+            'Vert': 'une énergie rafraîchissante, équilibrée, connectée à la croissance et à la pureté du cœur.',
+            'Noir': 'une affirmation claire de votre indépendance d\'esprit et de votre autonomie constructive.',
+            'Blanc': 'une période propice à la réceptivité, l\'accueil des énergies et la pureté des intentions.'
+        };
+
+        const svg = document.getElementById('diamantSvg');
+
+        function selectColor(color, name) {
+            currentColor = color;
+            currentColorName = name;
+            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function colorZone(element) {
+            if (!currentColor) {
+                alert("Choisis d'abord une couleur dans la palette de gauche !");
+                return;
+            }
+            element.style.fill = currentColor;
+            element.setAttribute('data-color-name', currentColorName);
+            clickHistory.push(parseInt(element.getAttribute('data-layer') || 1));
+        }
+
+        function getZoneFromAngle(deg) {
+            let normalDeg = (deg + 90) % 360;
+            if(normalDeg >= 45 && normalDeg < 135) return "EST";
+            if(normalDeg >= 135 && normalDeg < 225) return "SUD";
+            if(normalDeg >= 225 && normalDeg < 315) return "OUEST";
+            return "NORD";
+        }
+
+        // NAVIGATION : LA PASSERELLE ENTRE LES DESSINS
+        function switchDrawing(modelNumber, buttonElement) {
+            currentActiveModel = modelNumber;
+            clickHistory = []; // Reset de la dynamique
+            document.getElementById('resultsSection').style.display = "none"; // Cache les anciens profils
+            
+            // Gérer la classe active sur les boutons du menu
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            buttonElement.classList.add('active');
+
+            // Vider le SVG précédent
+            svg.innerHTML = "";
+
+            // Injecter le bon dessin
+            if (modelNumber === 1) generateDessin1();
+            if (modelNumber === 2) generateDessin2();
+            if (modelNumber === 3) generateDessin3();
+            if (modelNumber === 4) generateDessin4();
+        }
+
+        // ================= DESSIN 1 : LA ROSACE HAUTE DENSITÉ =================
+        function generateDessin1() {
+            const circles = [6, 12, 18, 24, 30, 36, 42, 48];
+            const div = 16;
+            for (let c = 0; c < circles.length; c++) {
+                let rOut = circles[c];
+                let rIn = c === 0 ? 0 : circles[c - 1];
+                for (let i = 0; i < div; i++) {
+                    let a1 = (i * (360 / div)) * Math.PI / 180;
+                    let a2 = ((i + 1) * (360 / div)) * Math.PI / 180;
+                    let p1x = rIn * Math.cos(a1);  let p1y = rIn * Math.sin(a1);
+                    let p2x = rOut * Math.cos(a1); let p2y = rOut * Math.sin(a1);
+                    let p3x = rOut * Math.cos(a2); let p3y = rOut * Math.sin(a2);
+                    let p4x = rIn * Math.cos(a2);  let p4y = rIn * Math.sin(a2);
+                    
+                    let poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                    poly.setAttribute("points", `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y} ${p4x},${p4y}`);
+                    poly.setAttribute("class", "zone");
+                    poly.setAttribute("data-layer", c + 1);
+                    poly.setAttribute("data-zone", getZoneFromAngle(i * (360 / div)));
+                    poly.onclick = function() { colorZone(this); };
+                    svg.appendChild(poly);
+                }
+            }
+        }
+
+        // ================= DESSIN 2 : LES ÉTOILES ENTRELACÉES =================
+        function generateDessin2() {
+            const divisions = 16;
+            for (let i = 0; i < divisions; i++) {
+                let a1 = (i * (360 / divisions)) * Math.PI / 180;
+                let a2 = ((i + 1) * (360 / divisions)) * Math.PI / 180;
+                let aMid = ((i + 0.5) * (360 / divisions)) * Math.PI / 180;
+                let p1 = { x: 0, y: 0 }, p2 = { x: (i%2==0?12:6)*Math.cos(a1), y: (i%2==0?12:6)*Math.sin(a1) }, p3 = { x: 4*Math.cos(aMid), y: 4*Math.sin(aMid) }, p4 = { x: ((i+1)%2==0?12:6)*Math.cos(a2), y: ((i+1)%2==0?12:6)*Math.sin(a2) };
+                
+                let poly1 = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                poly1.setAttribute("points", `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`);
+                poly1.setAttribute("class", "zone"); poly1.setAttribute("data-layer", 1);
+                poly1.setAttribute("data-zone", getZoneFromAngle(i*(360/divisions))); poly1.onclick = function() { colorZone(this); };
+                svg.appendChild(poly1);
+
+                let poly2 = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                poly2.setAttribute("points", `${p1.x},${p1.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`);
+                poly2.setAttribute("class", "zone"); poly2.setAttribute("data-layer", 1);
+                poly2.setAttribute("data-zone", getZoneFromAngle(i*(360/divisions))); poly2.onclick = function() { colorZone(this); };
+                svg.appendChild(poly2);
+            }
+            for (let i = 0; i < divisions; i++) {
+                let a1 = (i*(360/divisions))*Math.PI/180, a2 = ((i+1)*(360/divisions))*Math.PI/180, aMid = ((i+0.5)*(360/divisions))*Math.PI/180;
+                let pIn1 = { x:(i%2==0?12:6)*Math.cos(a1), y:(i%2==0?12:6)*Math.sin(a1) }, pIn2 = { x:((i+1)%2==0?12:6)*Math.cos(a2), y:((i+1)%2==0?12:6)*Math.sin(a2) }, pMidNode = { x:24*Math.cos(aMid), y:24*Math.sin(aMid) }, pOutL = { x:24*Math.cos(a1), y:24*Math.sin(a1) }, pOutR = { x:24*Math.cos(a2), y:24*Math.sin(a2) };
+                
+                let m1 = document.createElementNS("http://www.w3.org/2000/svg", "polygon"); m1.setAttribute("points", `${pIn1.x},${pIn1.y} ${pMidNode.x},${pMidNode.y} ${pOutL.x},${pOutL.y}`); m1.setAttribute("class", "zone"); m1.setAttribute("data-layer", 2); m1.setAttribute("data-zone", getZoneFromAngle(i*(360/divisions))); m1.onclick = function() { colorZone(this); }; svg.appendChild(m1);
+                let m2 = document.createElementNS("http://www.w3.org/2000/svg", "polygon"); m2.setAttribute("points", `${pIn2.x},${pIn2.y} ${pMidNode.x},${pMidNode.y} ${pOutR.x},${pOutR.y}`); m2.setAttribute("class", "zone"); m2.setAttribute("data-layer", 2); m2.setAttribute("data-zone", getZoneFromAngle(i*(360/divisions))); m2.onclick = function() { colorZone(this); }; svg.appendChild(m2);
+            }
+            for (let i = 0; i < divisions; i++) {
+                let a1 = (i*(360/divisions))*Math.PI/180, a2 = ((i+1)*(360/divisions))*Math.PI/180, aMid = ((i+0.5)*(360/divisions))*Math.PI/180;
+                let pInLeft = { x: 24*Math.cos(a1), y: 24*Math.sin(a1) }, pInRight = { x: 24*Math.cos(a2), y: 24*Math.sin(a2) }, pMidNode = { x: 34*Math.cos(aMid), y: 34*Math.sin(aMid) }, pEdgeLeft = { x: 48*Math.cos(a1), y: 48*Math.sin(a1) }, pEdgeRight = { x: 48*Math.cos(a2), y: 48*Math.sin(a2) }, pEdgeTip = { x: 48*Math.cos(aMid), y: 48*Math.sin(aMid) };
+                let facets = [[`${pInLeft.x},${pInLeft.y} ${pMidNode.x},${pMidNode.y} ${pEdgeLeft.x},${pEdgeLeft.y}`, 3], [`${pInRight.x},${pInRight.y} ${pMidNode.x},${pMidNode.y} ${pEdgeRight.x},${pEdgeRight.y}`, 3], [`${pMidNode.x},${pMidNode.y} ${pEdgeLeft.x},${pEdgeLeft.y} ${pEdgeTip.x},${pEdgeTip.y}`, 4], [`${pMidNode.x},${pMidNode.y} ${pEdgeRight.x},${pEdgeRight.y} ${pEdgeTip.x},${pEdgeTip.y}`, 4]];
+                facets.forEach(f => {
+                    let poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon"); poly.setAttribute("points", f[0]); poly.setAttribute("class", "zone"); poly.setAttribute("data-layer", f[1]); poly.setAttribute("data-zone", getZoneFromAngle(i*(360/divisions))); poly.onclick = function() { colorZone(this); }; svg.appendChild(poly);
+                });
+            }
+        }
+
+        // ================= DESSIN 3 : LES COURONNES ÉQUILIBRÉES =================
+        function generateDessin3() {
+            const divisions = 16;
+            const layersRadii = [5, 12, 20, 29, 39, 48];
+            for (let l = 0; l < layersRadii.length; l++) {
+                let rOut = layersRadii[l]; let rIn = l === 0 ? 0 : layersRadii[l-1];
+                for (let i = 0; i < divisions; i++) {
+                    let a1 = (i * 22.5) * Math.PI / 180; let a2 = ((i + 1) * 22.5) * Math.PI / 180; let aMid = ((i + 0.5) * 22.5) * Math.PI / 180;
+                    if (l % 2 === 1) {
+                        let poly1 = document.createElementNS("http://www.w3.org/2000/svg", "polygon"); poly1.setAttribute("points", `${rIn*Math.cos(a1)},${rIn*Math.sin(a1)} ${rOut*Math.cos(aMid)},${rOut*Math.sin(aMid)} ${rIn*Math.cos(aMid)},${rIn*Math.sin(aMid)}`); poly1.setAttribute("class", "zone"); poly1.setAttribute("data-layer", l+1); poly1.setAttribute("data-zone", getZoneFromAngle(i*22.5+11)); poly1.onclick = function() { colorZone(this); }; svg.appendChild(poly1);
+                        let poly2 = document.createElementNS("http://www.w3.org/2000/svg", "polygon"); poly2.setAttribute("points", `${rIn*Math.cos(a2)},${rIn*Math.sin(a2)} ${rOut*Math.cos(aMid)},${rOut*Math.sin(aMid)} ${rIn*Math.cos(aMid)},${rIn*Math.sin(aMid)}`); poly2.setAttribute("class", "zone"); poly2.setAttribute("data-layer", l+1); poly2.setAttribute("data-zone", getZoneFromAngle(i*22.5+11)); poly2.onclick = function() { colorZone(this); }; svg.appendChild(poly2);
+                    } else {
+                        let poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon"); poly.setAttribute("points", `${rIn*Math.cos(a1)},${rIn*Math.sin(a1)} ${rOut*Math.cos(a1)},${rOut*Math.sin(a1)} ${rOut*Math.cos(a2)},${rOut*Math.sin(a2)} ${rIn*Math.cos(a2)},${rIn*Math.sin(a2)}`); poly.setAttribute("class", "zone"); poly.setAttribute("data-layer", l+1); poly.setAttribute("data-zone", getZoneFromAngle(i*22.5+11)); poly.onclick = function() { colorZone(this); }; svg.appendChild(poly);
+                    }
+                }
+            }
+        }
+
+        // ================= DESSIN 4 : LE GRAND CRISTAL SACRÉ =================
+        function generateDessin4() {
+            const innerRadii = [3, 7, 12, 18, 25];
+            for(let c = 0; c < innerRadii.length; c++) {
+                let rOut = innerRadii[c]; let rIn = c === 0 ? 0 : innerRadii[c-1];
+                for(let i = 0; i < 32; i++) {
+                    let a1 = (i * 11.25) * Math.PI / 180; let a2 = ((i + 1) * 11.25) * Math.PI / 180;
+                    let poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                    poly.setAttribute("points", `${rIn*Math.cos(a1)},${rIn*Math.sin(a1)} ${rOut*Math.cos(a1)},${rOut*Math.sin(a1)} ${rOut*Math.cos(a2)},${rOut*Math.sin(a2)} ${rIn*Math.cos(a2)},${rIn*Math.sin(a2)}`);
+                    poly.setAttribute("class", "zone"); poly.setAttribute("data-layer", c+1); poly.setAttribute("data-zone", getZoneFromAngle(i*11.25)); poly.onclick = function() { colorZone(this); }; svg.appendChild(poly);
+                }
+            }
+            for(let i = 0; i < 16; i++) {
+                let ab = i * 22.5; let a1 = ab*Math.PI/180, a2 = (ab+22.5)*Math.PI/180, aMid = (ab+11.25)*Math.PI/180;
+                let pInL = {x:25*Math.cos(a1), y:25*Math.sin(a1)}, pInR = {x:25*Math.cos(a2), y:25*Math.sin(a2)}, pM1 = {x:31*Math.cos(aMid), y:31*Math.sin(aMid)}, pM2L = {x:39*Math.cos(a1), y:39*Math.sin(a1)}, pM2R = {x:39*Math.cos(a2), y:39*Math.sin(a2)}, pM2M = {x:39*Math.cos(aMid), y:39*Math.sin(aMid)}, pEL = {x:48*Math.cos(a1), y:48*Math.sin(a1)}, pER = {x:48*Math.cos(a2), y:48*Math.sin(a2)}, pET = {x:48*Math.cos(aMid), y:48*Math.sin(aMid)};
+                let crystalFacets = [[`${pInL.x},${pInL.y} ${pInR.x},${pInR.y} ${pM1.x},${pM1.y}`, 6], [`${pInL.x},${pInL.y} ${pM1.x},${pM1.y} ${pM2L.x},${pM2L.y}`, 7], [`${pInR.x},${pInR.y} ${pM1.x},${pM1.y} ${pM2R.x},${pM2R.y}`, 7], [`${pM1.x},${pM1.y} ${pM2L.x},${pM2L.y} ${pM2M.x},${pM2M.y}`, 8], [`${pM1.x},${pM1.y} ${pM2R.x},${pM2R.y} ${pM2M.x},${pM2M.y}`, 8], [`${pM2L.x},${pM2L.y} ${pM2M.x},${pM2M.y} ${pEL.x},${pEL.y}`, 9], [`${pM2R.x},${pM2R.y} ${pM2M.x},${pM2M.y} ${pER.x},${pER.y}`, 9], [`${pM2M.x},${pM2M.y} ${pEL.x},${pEL.y} ${pET.x},${pET.y}`, 10], [`${pM2M.x},${pM2M.y} ${pER.x},${pER.y} ${pET.x},${pET.y}`, 10]];
+                crystalFacets.forEach(f => {
+                    let poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon"); poly.setAttribute("points", f[0]); poly.setAttribute("class", "zone"); poly.setAttribute("data-layer", f[1]); poly.setAttribute("data-zone", getZoneFromAngle(ab+11)); poly.onclick = function() { colorZone(this); }; svg.appendChild(poly);
+                });
+            }
+        }
+
+        // CHARGEMENT INITIAL (Dessin 1 par défaut)
+        generateDessin1();
+
+        // ANALYSE COMPORTEMENTALE
+        function generateAnalysis() {
+            let dynaText = "";
+            if (clickHistory.length > 3) {
+                let firstHalf = clickHistory.slice(0, Math.ceil(clickHistory.length / 2));
+                let avgLayer = firstHalf.reduce((a,b) => a+b, 0) / firstHalf.length;
+                let limit = currentActiveModel === 4 ? 5 : 3;
+                
+                if (avgLayer < limit) {
+                    dynaText = "<strong>Votre approche créative :</strong> Vous avez naturellement démarré votre voyage du centre (votre MOI profond) pour vous déployer vers l'extérieur. C'est le signe éclatant de l'ouverture de votre personnalité vers le monde. Cette démarche traduit une confiance spontanée, une volonté d'épanouissement affectif et un désir de faire rayonner votre éclat intérieur sur votre entourage.";
+                    document.getElementById('badgeSens').innerText = "Dynamique : Centrifuge (Rayonnement)";
+                } else {
+                    dynaText = "<strong>Votre approche créative :</strong> Vos premiers choix se sont portés sur la périphérie pour se recentrer progressivement vers le cœur du diamant. Cela révèle un magnifique travail de recherche personnelle, d'introspection et de structuration. Vous avez besoin de poser le cadre, de recentrer vos énergies et de faire le point afin de consolider votre paix intérieure avant d'agir.";
+                    document.getElementById('badgeSens').innerText = "Dynamique : Centripète (Introspection)";
+                }
+            } else {
+                dynaText = "<strong>Votre approche créative :</strong> Prenez le temps de colorier davantage de formes pour faire apparaître la dynamique de votre structure énergétique.";
+            }
+
+            let counts = { NORD: {}, SUD: {}, EST: {}, OUEST: {} };
+            document.querySelectorAll('.zone').forEach(zone => {
+                let zName = zone.getAttribute('data-zone');
+                let cName = zone.getAttribute('data-color-name');
+                if (zName && cName) { counts[zName][cName] = (counts[zName][cName] || 0) + 1; }
+            });
+
+            function getDominantColorText(zoneName) {
+                let zoneColors = counts[zoneName]; let maxCount = 0; let dominantColor = "";
+                for (let c in zoneColors) { if (zoneColors[c] > maxCount) { maxCount = zoneColors[c]; dominantColor = c; } }
+                if (dominantColor) return `Votre couleur dominante est le <strong>${dominantColor}</strong>, révélant ${colorMeanings[dominantColor]}`;
+                return "Cette direction est teintée de nuances douces, symbole d'un équilibre fluide et d'une belle harmonie globale.";
+            }
+
+            document.getElementById('cardDynaText').innerHTML = dynaText;
+            document.getElementById('cardNordText').innerHTML = getDominantColorText('NORD');
+            document.getElementById('cardEstText').innerHTML = getDominantColorText('EST');
+            document.getElementById('cardSudText').innerHTML = getDominantColorText('SUD');
+            document.getElementById('cardOuestText').innerHTML = getDominantColorText('OUEST');
+
+            document.getElementById('resultsSection').style.display = "block";
+            window.scrollTo({ top: document.getElementById('resultsSection').offsetTop, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
